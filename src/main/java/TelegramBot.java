@@ -6,17 +6,14 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class TelegramBot extends TelegramLongPollingBot {
-
-
-    public static final String BOT_TOKEN = "5893732280:AAHQx2A67vtf6ZCgctzJWqhscWjI4tB60c0";
-
-    public static final String BOT_USERNAME = "NasaJavaTelegram_bot";
-    //    public static final String CHAT_ID = "5214817492";
+    public static final String BOT_TOKEN = getConfig("token.txt");
+    public static final String BOT_USERNAME = getConfig("username.txt");
     public static long chatID;
-    public static final String URI =
-            "https://api.nasa.gov/planetary/apod?api_key=nz8GILqM7wjvZRatpl9BE4T9IW74nT0OH0Deaq41";
+    public static final String URI = getConfig("nasaURI.txt");
 
     public TelegramBot() throws TelegramApiException {
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
@@ -81,5 +78,15 @@ public class TelegramBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    private static String getConfig(String filename) {
+        String result;
+        try {
+            result = Files.readString(Path.of(filename));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
     }
 }

@@ -19,6 +19,7 @@ build/
 *.iws
 *.iml
 *.ipr
+*.txt
 out/
 Thumbs.db*
 .DS_Store
