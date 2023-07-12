@@ -8,12 +8,31 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TelegramBot extends TelegramLongPollingBot {
     public static final String BOT_TOKEN = getConfig("token.txt");
     public static final String BOT_USERNAME = getConfig("username.txt");
     public static long chatID;
     public static final String URI = getConfig("nasaURI.txt");
+    public static final String HELP = """
+            Привет, я чат-бот API NASA.
+            Высылаю фото по запросу.
+            Фото обновляется раз в сутки.
+            Команды:
+            /give - получить фото.
+            /giveHD - получить HD фото.
+            /exp - получить описание к фото.
+            /help - помощь.""";
+    public static Map<String, Sender> commandMap = new HashMap<>();
+
+    {
+        commandMap.put("/give", () -> sendMessage(Utils.getUrl(URI)));
+        commandMap.put("/giveHD", () -> sendMessage(Utils.getHDUrl(URI)));
+        commandMap.put("/exp", () -> sendMessage(Utils.getExplanation(URI)));
+        commandMap.put("/help", () -> sendMessage(HELP));
+    }
 
     public TelegramBot() throws TelegramApiException {
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
@@ -39,30 +58,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             if (update.hasMessage()) {
                 chatID = update.getMessage().getChatId();
-                switch (update.getMessage().getText()) {
-                    case "/help":
-                        sendMessage("Привет, я чат-бот NASA! " +
-                                "\nВысылаю фото с сайта NASA по запросу. " +
-                                "\nФото обновляется раз в сутки. " +
-                                "\nКоманды: " +
-                                "\n/help - помощь." +
-                                "\n/give - получить фото." +
-                                "\n/giveHD - получить HD фото." +
-                                "\n/exp - получить описание к фото.");
-                        break;
-                    case "/give":
-                        sendMessage(Utils.getUrl(URI));
-                        break;
-                    case "/giveHD":
-                        sendMessage(Utils.getHDUrl(URI));
-                        break;
-                    case "/exp":
-                        sendMessage(Utils.getExplanation(URI));
-                        break;
-                    default:
-                        sendMessage("Неизвестная команда." +
-                                " Вызов справки: /help");
-                }
+                commandMap.getOrDefault(
+                                update.getMessage().getText(),
+                                () -> sendMessage("Неизвестная команда.\n/help - помощь."))
+                        .send();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
