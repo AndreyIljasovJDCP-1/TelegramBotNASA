@@ -1,3 +1,5 @@
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -12,10 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TelegramBot extends TelegramLongPollingBot {
-    public static final String BOT_TOKEN = getConfig("token.txt");
-    public static final String BOT_USERNAME = getConfig("username.txt");
-    public static long chatID;
-    public static final String URI = getConfig("nasaURI.txt");
     public static final String HELP = """
             Привет, я чат-бот API NASA.
             Высылаю фото по запросу.
@@ -25,19 +23,32 @@ public class TelegramBot extends TelegramLongPollingBot {
             /giveHD - получить HD фото.
             /exp - получить описание к фото.
             /help - помощь.""";
-    public static Map<String, Sender> commandMap = new HashMap<>();
+    public static final String UNKNOWN = """
+            Неизвестная команда.
+            /help - помощь.""";
+    public static final Map<String, Sender> commandMap = new HashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
+    public static long chatID;
+    public static String BOT_TOKEN;
+    public static String BOT_USERNAME;
+    public static String URI;
 
     {
         commandMap.put("/give", () -> sendMessage(Utils.getUrl(URI)));
         commandMap.put("/giveHD", () -> sendMessage(Utils.getHDUrl(URI)));
         commandMap.put("/exp", () -> sendMessage(Utils.getExplanation(URI)));
         commandMap.put("/help", () -> sendMessage(HELP));
+
+        BOT_TOKEN = getConfig("token.txt");
+        BOT_USERNAME = getConfig("username.txt");
+        URI = getConfig("nasaURI.txt");
     }
 
     public TelegramBot() throws TelegramApiException {
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
         try {
             botsApi.registerBot(this);
+            logger.info("Bot is running...");
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -60,7 +71,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 chatID = update.getMessage().getChatId();
                 commandMap.getOrDefault(
                                 update.getMessage().getText(),
-                                () -> sendMessage("Неизвестная команда.\n/help - помощь."))
+                                () -> sendMessage(UNKNOWN))
                         .send();
             }
         } catch (IOException e) {
