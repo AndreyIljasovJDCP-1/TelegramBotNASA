@@ -68,9 +68,10 @@ public class TelegramBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         try {
             if (update.hasMessage()) {
-                chatID = update.getMessage().getChatId();
+                var message = update.getMessage();
+                chatID = message.getChatId();
                 commandMap.getOrDefault(
-                                update.getMessage().getText(),
+                                message.getText(),
                                 () -> sendMessage(UNKNOWN))
                         .send();
             }
